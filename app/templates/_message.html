@@ -1,0 +1,3 @@
+<div class="msg {{ 'user' if message.role=='user' else 'assistant' }}">
+  <div class="bubble">{{ message.content | safe }}</div>
+</div>

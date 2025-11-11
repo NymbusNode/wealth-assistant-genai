@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block content %}
+<h1>Welcome{{ " " + user.name if user.name else "" }}</h1>
+<div class="grid">
+<div class="card"><h3>Your Profile</h3>
+<p><b>Risk:</b> {{ user.risk_tolerance.value|capitalize }}</p>
+<p><b>Goal:</b> {{ user.financial_goal or "—" }}</p>
+<p><b>Income:</b> {{ user.annual_income }}</p>
+<a href="/profile" class="btn">Edit Profile</a></div>
+<div class="card"><h3>Recent Questions</h3>
+{% if recent_chats %}<ul>{% for c in recent_chats %}<li><a href="/chat/{{c.id}}">Chat {{ loop.index }}</a></li>{% endfor %}</ul>{% else %}<p class="muted">No chats yet.</p>{% endif %}
+<a href="/chat" class="btn">Start New Chat</a></div>
+<div class="card"><h3>Portfolio Snapshot</h3><p class="muted">Demo placeholder — add seed later.</p></div>
+</div>{% endblock %}
