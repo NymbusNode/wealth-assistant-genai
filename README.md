@@ -1,2 +1,2 @@
-# wealth-assistant-genai
-Mini Wealth Management Assistant built with FastAPI, HTMX, PostgreSQL (pgvector), and OpenAI GenAI for conversational portfolio insights
+# Wealth Assistant GenAI Skeleton
+See requirements and .env.template. Run `docker compose up -d` to start Postgres, then `python -m app.scripts.ingest_seed` to create tables and ingest docs.
