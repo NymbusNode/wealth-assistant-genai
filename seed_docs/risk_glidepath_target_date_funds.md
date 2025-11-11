@@ -1,0 +1,1 @@
+Target-date funds reduce equity exposure and increase bonds/cash as the target year approaches, creating a glide path to lower volatility near retirement.

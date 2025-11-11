@@ -1,0 +1,1 @@
+Taxable brokerage accounts are flexible but subject to taxes. IRAs offer tax advantages with contribution limits and withdrawal rules. Roth IRAs are funded with after-tax dollars and qualified withdrawals are tax-free.

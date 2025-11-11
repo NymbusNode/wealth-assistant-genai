@@ -1,0 +1,1 @@
+Firms assess client suitability by evaluating objectives, risk tolerance, liquidity needs, and time horizon. Advisors must act in the client's best interest and disclose conflicts. This demo is educational.

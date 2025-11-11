@@ -1,0 +1,1 @@
+Asset allocation is the mix of stocks, bonds, and cash chosen based on risk tolerance, goals, and time horizon. Diversification reduces idiosyncratic risk. Rebalancing brings a portfolio back to target after market moves.
