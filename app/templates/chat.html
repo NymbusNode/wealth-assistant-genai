@@ -1,9 +1,9 @@
 {% extends "base.html" %}{% block content %}
 <h2>Chat</h2>
 <div id="chat-log" class="chat-log">
-  {% for m in messages %}{% include "_message.html" %}{% endfor %}
+  {% for message in messages %}{% include "_message.html" %}{% endfor %}
 </div>
-<form hx-post="/chat/{{chat_id}}/message" hx-target="#chat-log" hx-swap="beforeend" class="chat-form">
+<form hx-post="/chat/{{chat_id}}/message" hx-target="#chat-log" hx-swap="beforeend" hx-on::after-request="this.reset()" class="chat-form">
   <input name="content" placeholder="Ask about asset allocation, account types, etc." required>
   <button type="submit">Send</button>
 </form>{% endblock %}

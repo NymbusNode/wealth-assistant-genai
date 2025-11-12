@@ -6,6 +6,7 @@ from app.db import get_db, Base, engine
 from app.models import User, Chat, Message, Risk, Document
 from app.security import hash_password, verify_password, issue_session, current_user_id, SESSION_COOKIE
 from app.rag import answer as rag_answer
+import markdown
 
 templates = Environment(loader=FileSystemLoader("app/templates"), autoescape=select_autoescape())
 router = APIRouter()
@@ -121,11 +122,15 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     u, r = user_or_redirect(request, db) 
     if r: 
         return r
-    db.add(Message(chat_id=chat_id, role="user", content=content))
+    um = Message(chat_id=chat_id, role="user", content=content)
+    db.add(um)
     db.commit()
     meta = {"risk": u.risk_tolerance.value, "goal": u.financial_goal}
     res = rag_answer(db, content, meta)
-    am = Message(chat_id=chat_id, role="assistant", content=res["answer"], retrieval_meta=res["sources"]) 
+    
+    # Convert markdown to HTML for assistant response
+    answer_html = markdown.markdown(res["answer"], extensions=['extra', 'nl2br'])
+    am = Message(chat_id=chat_id, role="assistant", content=answer_html, retrieval_meta=res["sources"]) 
     db.add(am)
     db.commit()
 
@@ -133,7 +138,10 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     env = Environment(loader=FileSystemLoader("app/templates"))
     tpl = env.get_template("_message.html")
     
-    return HTMLResponse(tpl.render(message=am))
+    # Return both user message and assistant response
+    user_html = tpl.render(message=um)
+    assistant_html = tpl.render(message=am)
+    return HTMLResponse(user_html + assistant_html)
 
 @router.get("/library", response_class=HTMLResponse)
 def library(request:Request, db:Session=Depends(get_db)):
