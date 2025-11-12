@@ -138,13 +138,17 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     um = Message(chat_id=chat_id, role="user", content=content)
     db.add(um)
     db.commit()
+    
+    from datetime import datetime
     meta = {
         "name": u.name,
         "age": u.age,
         "annual_income": float(u.annual_income),
         "risk_tolerance": u.risk_tolerance.value,
         "financial_goal": u.financial_goal,
-        "retirement_age": u.retirement_age
+        "retirement_age": u.retirement_age,
+        "current_date": datetime.now().strftime("%Y-%m-%d"),
+        "current_datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     res = rag_answer(db, content, meta)
     

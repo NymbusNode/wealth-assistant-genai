@@ -32,6 +32,11 @@ def answer(db:Session, query:str, user_meta:Dict)->Dict:
 
     # Build comprehensive user profile clause
     profile_parts = []
+    
+    # Add current date/time information first
+    if user_meta.get('current_date'):
+        profile_parts.append(f"Current Date: {user_meta['current_date']}")
+    
     if user_meta.get('name'):
         profile_parts.append(f"Name: {user_meta['name']}")
     if user_meta.get('age'):
@@ -42,6 +47,11 @@ def answer(db:Session, query:str, user_meta:Dict)->Dict:
         profile_parts.append(f"Risk Tolerance: {user_meta['risk_tolerance']}")
     if user_meta.get('retirement_age'):
         profile_parts.append(f"Target Retirement Age: {user_meta['retirement_age']}")
+        # Calculate years until retirement if we have age
+        if user_meta.get('age') and user_meta.get('retirement_age'):
+            years_to_retirement = user_meta['retirement_age'] - user_meta['age']
+            if years_to_retirement > 0:
+                profile_parts.append(f"Years Until Retirement: {years_to_retirement}")
     if user_meta.get('financial_goal'):
         profile_parts.append(f"Financial Goal: {user_meta['financial_goal']}")
     
