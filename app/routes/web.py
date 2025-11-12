@@ -106,17 +106,18 @@ def chat_new(request:Request, db:Session=Depends(get_db)):
     u, r = user_or_redirect(request, db)
     if r: 
         return r
-    
-    c = Chat(user_id=u.id, title="")
-    db.add(c)
-    db.commit()
-    return RedirectResponse(f"/chat/{c.id}", status_code=302)
+    # Render chat page without creating a chat yet
+    return render("chat.html", user=u, chat_id="new", messages=[])
 
 @router.get("/chat/{chat_id}", response_class=HTMLResponse)
 def chat_view(chat_id:str, request:Request, db:Session=Depends(get_db)):
     u, r = user_or_redirect(request, db)
     if r: 
         return r
+    # Handle "new" chat_id
+    if chat_id == "new":
+        return render("chat.html", user=u, chat_id="new", messages=[])
+    
     msgs = db.query(Message).filter_by(chat_id=chat_id).order_by(Message.created_at).all()
     return render("chat.html", user=u, chat_id=chat_id, messages=msgs)
 
@@ -125,6 +126,15 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     u, r = user_or_redirect(request, db) 
     if r: 
         return r
+    
+    # Create new chat if chat_id is "new"
+    is_new_chat = (chat_id == "new")
+    if is_new_chat:
+        c = Chat(user_id=u.id, title="")
+        db.add(c)
+        db.commit()
+        chat_id = c.id
+    
     um = Message(chat_id=chat_id, role="user", content=content)
     db.add(um)
     db.commit()
@@ -151,7 +161,14 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     # Return both user message and assistant response
     user_html = tpl.render(message=um)
     assistant_html = tpl.render(message=am)
-    return HTMLResponse(user_html + assistant_html)
+    
+    # If this was a new chat, add HTMX headers to update the form action and URL
+    response = HTMLResponse(user_html + assistant_html)
+    if is_new_chat:
+        response.headers["HX-Push-Url"] = f"/chat/{chat_id}"
+        response.headers["HX-Trigger"] = f'{{"updateChatForm":"{chat_id}"}}'
+    
+    return response
 
 @router.get("/library", response_class=HTMLResponse)
 def library(request:Request, db:Session=Depends(get_db)):

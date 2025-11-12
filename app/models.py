@@ -6,7 +6,10 @@ import enum, uuid
 
 def gen_uuid(): return str(uuid.uuid4())
 
-class Risk(str, enum.Enum): low="low"; medium="medium"; high="high"
+class Risk(str, enum.Enum):
+    low="low" 
+    medium="medium" 
+    high="high"
 
 class User(Base):
     __tablename__="users"

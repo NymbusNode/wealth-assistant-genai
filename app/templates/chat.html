@@ -3,7 +3,17 @@
 <div id="chat-log" class="chat-log">
   {% for message in messages %}{% include "_message.html" %}{% endfor %}
 </div>
-<form hx-post="/chat/{{chat_id}}/message" hx-target="#chat-log" hx-swap="beforeend" hx-on::after-request="this.reset()" class="chat-form">
+<form id="chat-form" hx-post="/chat/{{chat_id}}/message" hx-target="#chat-log" hx-swap="beforeend" hx-on::after-request="this.reset()" class="chat-form">
   <input name="content" placeholder="Ask about asset allocation, account types, etc." required>
   <button type="submit">Send</button>
-</form>{% endblock %}
+</form>
+<script>
+document.body.addEventListener('updateChatForm', function(evt) {
+  const chatId = evt.detail.value;
+  const form = document.getElementById('chat-form');
+  if (form) {
+    form.setAttribute('hx-post', '/chat/' + chatId + '/message');
+  }
+});
+</script>
+{% endblock %}
