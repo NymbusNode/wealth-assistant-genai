@@ -31,3 +31,10 @@ input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #263042;b
 .table th,.table td{padding:8px;border-bottom:1px solid #1f2630}
 .chat-form{display:flex;gap:8px}
 .chat-form input{flex:1}
+.chat-list{list-style:none;padding:0;margin:0}
+.chat-list li{margin:8px 0;padding:8px;border-radius:8px;transition:background 0.2s}
+.chat-list li:hover{background:#1a1f2e}
+.chat-list a{color:var(--text);text-decoration:none;display:block}
+.chat-num{color:var(--accent);font-weight:600;margin-right:4px}
+.chat-title{color:var(--text);font-weight:500}
+.chat-time{color:var(--muted);font-size:0.85em;margin-left:1.5em}

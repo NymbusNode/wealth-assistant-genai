@@ -9,7 +9,7 @@
 <p><b>Income:</b> ${{ "{:,.2f}".format(user.annual_income) if user.annual_income else "—" }}</p>
 <a href="/profile" class="btn">Edit Profile</a></div>
 <div class="card"><h3>Recent Questions</h3>
-{% if recent_chats %}<ul>{% for c in recent_chats %}<li><a href="/chat/{{c.id}}">Chat {{ loop.index }}</a></li>{% endfor %}</ul>{% else %}<p class="muted">No chats yet.</p>{% endif %}
+{% if recent_chats %}<ul class="chat-list">{% for c in recent_chats %}<li><a href="/chat/{{c.id}}"><span class="chat-num">{{ loop.index }}.</span> <span class="chat-title">{{ c.title or "Untitled Chat" }}</span><br><span class="chat-time">{{ c.created_at.strftime('%m/%d/%y %I:%M %p') if c.created_at else "—" }}</span></a></li>{% endfor %}</ul>{% else %}<p class="muted">No chats yet.</p>{% endif %}
 <a href="/chat" class="btn">Start New Chat</a></div>
 <div class="card"><h3>Portfolio Snapshot</h3><p class="muted">Demo placeholder — add seed later.</p></div>
 </div>{% endblock %}

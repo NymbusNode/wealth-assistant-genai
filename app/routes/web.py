@@ -6,7 +6,11 @@ from app.db import get_db, Base, engine
 from app.models import User, Chat, Message, Risk, Document
 from app.security import hash_password, verify_password, issue_session, current_user_id, SESSION_COOKIE
 from app.rag import answer as rag_answer
+from openai import OpenAI
+from app.config import settings
 import markdown
+
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 templates = Environment(loader=FileSystemLoader("app/templates"), autoescape=select_autoescape())
 router = APIRouter()
@@ -14,6 +18,25 @@ Base.metadata.create_all(bind=engine)
 
 def render(name, **ctx):
     return HTMLResponse(templates.get_template(name).render(**ctx))
+
+def generate_chat_title(user_message: str) -> str:
+    """Generate a concise chat title (3-6 words) based on the user's first message."""
+    try:
+        response = client.chat.completions.create(
+            model=settings.CHAT_MODEL,
+            messages=[
+                {"role": "system", "content": "Generate a concise, descriptive title (3-6 words max) for a financial advisory chat based on the user's question. Return ONLY the title, no quotes or extra text."},
+                {"role": "user", "content": user_message}
+            ],
+            max_tokens=20,
+            temperature=0.7
+        )
+        title = response.choices[0].message.content.strip().strip('"\'')
+        # Limit to 50 characters max
+        return title[:50] if len(title) > 50 else title
+    except:
+        # Fallback: use first 40 chars of message
+        return user_message[:40] + "..." if len(user_message) > 40 else user_message
 
 def user_or_redirect(request:Request, db:Session):
     uid = current_user_id(request)
@@ -130,7 +153,9 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     # Create new chat if chat_id is "new"
     is_new_chat = (chat_id == "new")
     if is_new_chat:
-        c = Chat(user_id=u.id, title="")
+        # Generate title from user's first message
+        title = generate_chat_title(content)
+        c = Chat(user_id=u.id, title=title)
         db.add(c)
         db.commit()
         chat_id = c.id
