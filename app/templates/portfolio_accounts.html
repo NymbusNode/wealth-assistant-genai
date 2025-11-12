@@ -1,0 +1,35 @@
+<div class="accounts-list">
+{% for account in accounts %}
+<details class="account-details">
+  <summary class="account-summary">
+    <div class="account-header">
+      <span class="account-name"><b>{{ account.name }}</b></span>
+      <span class="account-balance">${{ "{:,.2f}".format(account.balance) }}</span>
+    </div>
+    <div class="account-meta">
+      <span>{{ account.institution }} •••{{ account.last4 }}</span>
+      <span class="{{ 'positive' if account.ytd_return > 0 else 'negative' }}">YTD: {{ "{:+.1f}".format(account.ytd_return) }}%</span>
+    </div>
+  </summary>
+  <div class="holdings-table">
+    <table class="table">
+      <thead>
+        <tr><th>Symbol</th><th>Asset Class</th><th>Quantity</th><th>Price</th><th>Value</th><th>Gain/Loss</th></tr>
+      </thead>
+      <tbody>
+        {% for holding in account.holdings %}
+        <tr>
+          <td><b>{{ holding.symbol }}</b></td>
+          <td><span class="badge">{{ holding.asset_class }}</span></td>
+          <td>{{ "{:.2f}".format(holding.quantity) }}</td>
+          <td>${{ "{:.2f}".format(holding.price) }}</td>
+          <td>${{ "{:,.2f}".format(holding.market_value) }}</td>
+          <td class="{{ 'positive' if holding.gain_loss_pct > 0 else 'negative' }}">{{ "{:+.1f}".format(holding.gain_loss_pct) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>
+{% endfor %}
+</div>

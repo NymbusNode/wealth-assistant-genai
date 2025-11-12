@@ -55,6 +55,26 @@ def answer(db:Session, query:str, user_meta:Dict)->Dict:
     if user_meta.get('financial_goal'):
         profile_parts.append(f"Financial Goal: {user_meta['financial_goal']}")
     
+    # Add portfolio information if available
+    portfolio = user_meta.get('portfolio')
+    if portfolio:
+        profile_parts.append(f"\nCurrent Portfolio:")
+        profile_parts.append(f"  Total Value: ${portfolio['total_value']:,.2f}")
+        profile_parts.append(f"  YTD Return: {portfolio['ytd_return']:.2f}%")
+        profile_parts.append(f"  Risk Score: {portfolio['risk_score']:.0f}/100")
+        profile_parts.append(f"  Number of Accounts: {portfolio['accounts_count']}")
+        
+        # Add asset allocation
+        if portfolio.get('asset_allocation'):
+            alloc_str = ", ".join([f"{k}: {v:.1f}%" for k, v in portfolio['asset_allocation'].items()])
+            profile_parts.append(f"  Asset Allocation: {alloc_str}")
+        
+        # Add top holdings
+        if portfolio.get('top_holdings'):
+            top_3 = portfolio['top_holdings'][:3]
+            holdings_str = ", ".join([f"{h['symbol']} ({h['allocation_pct']:.1f}%)" for h in top_3])
+            profile_parts.append(f"  Top Holdings: {holdings_str}")
+    
     user_clause = "User Profile:\n" + "\n".join(profile_parts) if profile_parts else "User profile not provided"
     
     messages=[{"role":"system","content":SYSTEM_PROMPT},

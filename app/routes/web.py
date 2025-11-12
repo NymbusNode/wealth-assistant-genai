@@ -6,6 +6,7 @@ from app.db import get_db, Base, engine
 from app.models import User, Chat, Message, Risk, Document
 from app.security import hash_password, verify_password, issue_session, current_user_id, SESSION_COOKIE
 from app.rag import answer as rag_answer
+from app.portfolio import generate_portfolio_data, calculate_portfolio_metrics
 from openai import OpenAI
 from app.config import settings
 import markdown
@@ -68,6 +69,10 @@ def register(username:str=Form(), password:str=Form(), name:str=Form(""),
              annual_income=annual_income, risk_tolerance=Risk(risk_tolerance), financial_goal=financial_goal,
              retirement_age=retirement_age)
     db.add(u); db.commit()
+    
+    # Generate realistic portfolio data for new user
+    generate_portfolio_data(u.id, db, risk_tolerance)
+    
     resp = RedirectResponse("/dashboard", status_code=302)
     resp.set_cookie(SESSION_COOKIE, issue_session(u.id), httponly=True) 
     return resp
@@ -99,7 +104,8 @@ def dashboard(request:Request, db:Session=Depends(get_db)):
     if r: 
         return r
     chats = db.query(Chat).filter_by(user_id=u.id).order_by(Chat.created_at.desc()).limit(3).all()
-    return render("dashboard.html", user=u, recent_chats=chats)
+    portfolio_metrics = calculate_portfolio_metrics(u.id, db)
+    return render("dashboard.html", user=u, recent_chats=chats, portfolio=portfolio_metrics)
 
 @router.get("/profile", response_class=HTMLResponse)
 def profile(request:Request, db:Session=Depends(get_db)):
@@ -165,6 +171,10 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     db.commit()
     
     from datetime import datetime
+    
+    # Get portfolio metrics for AI context
+    portfolio_metrics = calculate_portfolio_metrics(u.id, db)
+    
     meta = {
         "name": u.name,
         "age": u.age,
@@ -173,7 +183,8 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
         "financial_goal": u.financial_goal,
         "retirement_age": u.retirement_age,
         "current_date": datetime.now().strftime("%Y-%m-%d"),
-        "current_datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "current_datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "portfolio": portfolio_metrics if portfolio_metrics else None
     }
     res = rag_answer(db, content, meta)
     
@@ -198,6 +209,46 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
         response.headers["HX-Trigger"] = f'{{"updateChatForm":"{chat_id}"}}'
     
     return response
+
+@router.get("/portfolio/accounts", response_class=HTMLResponse)
+def portfolio_accounts(request:Request, db:Session=Depends(get_db)):
+    u, r = user_or_redirect(request, db)
+    if r: 
+        return r
+    
+    from app.models import Account, Holding
+    accounts = db.query(Account).filter_by(user_id=u.id).all()
+    
+    accounts_data = []
+    for account in accounts:
+        holdings = db.query(Holding).filter_by(account_id=account.id).all()
+        holdings_data = []
+        for holding in holdings:
+            market_value = float(holding.quantity * holding.price)
+            gain_loss_pct = ((float(holding.price) - float(holding.cost_basis)) / float(holding.cost_basis) * 100) if holding.cost_basis > 0 else 0
+            holdings_data.append({
+                "symbol": holding.symbol,
+                "asset_class": holding.asset_class,
+                "sector": holding.sector,
+                "quantity": float(holding.quantity),
+                "price": float(holding.price),
+                "market_value": market_value,
+                "gain_loss_pct": gain_loss_pct,
+                "dividend_yield": float(holding.dividend_yield)
+            })
+        
+        accounts_data.append({
+            "id": account.id,
+            "name": account.name,
+            "type": account.account_type,
+            "institution": account.institution,
+            "last4": account.last4,
+            "balance": float(account.balance),
+            "ytd_return": float(account.ytd_return),
+            "holdings": holdings_data
+        })
+    
+    return render("portfolio_accounts.html", accounts=accounts_data)
 
 @router.get("/library", response_class=HTMLResponse)
 def library(request:Request, db:Session=Depends(get_db)):

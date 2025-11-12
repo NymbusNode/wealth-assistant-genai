@@ -55,3 +55,27 @@ class Message(Base):
     content:Mapped[str]=mapped_column(Text)
     retrieval_meta:Mapped[dict|None]=mapped_column(JSON, nullable=True)
     created_at:Mapped[str]=mapped_column(DateTime(timezone=True), server_default=func.now())
+
+class Account(Base):
+    __tablename__="accounts"
+    id:Mapped[str]=mapped_column(String, primary_key=True, default=gen_uuid)
+    user_id:Mapped[str]=mapped_column(String, ForeignKey("users.id"))
+    name:Mapped[str]=mapped_column(String)
+    account_type:Mapped[str]=mapped_column(String)
+    institution:Mapped[str]=mapped_column(String)
+    last4:Mapped[str]=mapped_column(String)
+    balance:Mapped[Numeric]=mapped_column(Numeric, default=0)
+    ytd_return:Mapped[Numeric]=mapped_column(Numeric, default=0)
+    created_at:Mapped[str]=mapped_column(DateTime(timezone=True), server_default=func.now())
+
+class Holding(Base):
+    __tablename__="holdings"
+    id:Mapped[str]=mapped_column(String, primary_key=True, default=gen_uuid)
+    account_id:Mapped[str]=mapped_column(String, ForeignKey("accounts.id"))
+    symbol:Mapped[str]=mapped_column(String)
+    asset_class:Mapped[str]=mapped_column(String)
+    sector:Mapped[str]=mapped_column(String, default="")
+    quantity:Mapped[Numeric]=mapped_column(Numeric)
+    price:Mapped[Numeric]=mapped_column(Numeric)
+    cost_basis:Mapped[Numeric]=mapped_column(Numeric)
+    dividend_yield:Mapped[Numeric]=mapped_column(Numeric, default=0)

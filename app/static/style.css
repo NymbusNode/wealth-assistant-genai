@@ -38,3 +38,19 @@ input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #263042;b
 .chat-num{color:var(--accent);font-weight:600;margin-right:4px}
 .chat-title{color:var(--text);font-weight:500}
 .chat-time{color:var(--muted);font-size:0.85em;margin-left:1.5em}
+.portfolio-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.summary-card{background:var(--card);padding:16px;border-radius:10px;border:1px solid #1f2630;text-align:center}
+.summary-label{color:var(--muted);font-size:0.85em;margin-bottom:6px}
+.summary-value{font-size:1.8em;font-weight:600;color:var(--text)}
+.positive{color:#51cf66}
+.negative{color:#ff6b9d}
+.accounts-list{margin-top:12px}
+.account-details{background:#0e121a;border:1px solid #1f2630;border-radius:8px;margin-bottom:10px}
+.account-summary{padding:12px;cursor:pointer;list-style:none}
+.account-summary::-webkit-details-marker{display:none}
+.account-header{display:flex;justify-content:space-between;margin-bottom:4px}
+.account-name{font-size:1.05em}
+.account-balance{color:var(--accent);font-weight:600}
+.account-meta{display:flex;justify-content:space-between;font-size:0.85em;color:var(--muted);margin-top:4px}
+.holdings-table{padding:0 12px 12px;overflow-x:auto}
+.badge{background:#1a2433;padding:3px 8px;border-radius:4px;font-size:0.85em}

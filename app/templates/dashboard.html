@@ -1,5 +1,28 @@
 {% extends "base.html" %}{% block content %}
 <h1>Welcome{{ " " + user.name if user.name else "" }}</h1>
+
+<!-- Portfolio Summary Cards -->
+{% if portfolio %}
+<div class="portfolio-summary">
+  <div class="summary-card">
+    <div class="summary-label">Total Portfolio Value</div>
+    <div class="summary-value">${{ "{:,.2f}".format(portfolio.total_value) }}</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">YTD Return</div>
+    <div class="summary-value {{ 'positive' if portfolio.ytd_return > 0 else 'negative' }}">{{ "{:+.2f}".format(portfolio.ytd_return) }}%</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Risk Score</div>
+    <div class="summary-value">{{ "{:.0f}".format(portfolio.risk_score) }}/100</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Accounts</div>
+    <div class="summary-value">{{ portfolio.accounts_count }}</div>
+  </div>
+</div>
+{% endif %}
+
 <div class="grid">
 <div class="card"><h3>Your Profile</h3>
 <p><b>Age:</b> {{ user.age or "—" }}</p>
@@ -8,8 +31,75 @@
 <p><b>Goal:</b> {{ user.financial_goal or "—" }}</p>
 <p><b>Income:</b> ${{ "{:,.2f}".format(user.annual_income) if user.annual_income else "—" }}</p>
 <a href="/profile" class="btn">Edit Profile</a></div>
+
 <div class="card"><h3>Recent Questions</h3>
 {% if recent_chats %}<ul class="chat-list">{% for c in recent_chats %}<li><a href="/chat/{{c.id}}"><span class="chat-num">{{ loop.index }}.</span> <span class="chat-title">{{ c.title or "Untitled Chat" }}</span><br><span class="chat-time">{{ c.created_at.strftime('%m/%d/%y %I:%M %p') if c.created_at else "—" }}</span></a></li>{% endfor %}</ul>{% else %}<p class="muted">No chats yet.</p>{% endif %}
 <a href="/chat" class="btn">Start New Chat</a></div>
-<div class="card"><h3>Portfolio Snapshot</h3><p class="muted">Demo placeholder — add seed later.</p></div>
-</div>{% endblock %}
+
+<div class="card"><h3>Asset Allocation</h3>
+{% if portfolio %}
+<canvas id="allocationChart" style="max-height:240px"></canvas>
+<div id="portfolio-details" hx-get="/portfolio/accounts" hx-trigger="click from:#view-details" hx-swap="innerHTML" style="margin-top:12px">
+  <button id="view-details" class="btn">View Account Details</button>
+</div>
+{% else %}
+<p class="muted">No portfolio data available</p>
+{% endif %}
+</div>
+</div>
+
+{% if portfolio and portfolio.top_holdings %}
+<div class="card" style="margin-top:16px"><h3>Top Holdings</h3>
+<table class="table">
+<thead><tr><th>Symbol</th><th>Asset Class</th><th>Value</th><th>Allocation</th><th>Gain/Loss</th></tr></thead>
+<tbody>
+{% for holding in portfolio.top_holdings %}
+<tr>
+  <td><b>{{ holding.symbol }}</b></td>
+  <td>{{ holding.asset_class }}</td>
+  <td>${{ "{:,.2f}".format(holding.market_value) }}</td>
+  <td>{{ "{:.1f}".format(holding.allocation_pct) }}%</td>
+  <td class="{{ 'positive' if holding.gain_loss_pct > 0 else 'negative' }}">{{ "{:+.1f}".format(holding.gain_loss_pct) }}%</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+
+{% if portfolio %}
+<script>
+const ctx = document.getElementById('allocationChart');
+const allocation = {{ portfolio.asset_allocation|tojson }};
+new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(allocation),
+    datasets: [{
+      data: Object.values(allocation),
+      backgroundColor: ['#5aa6ff', '#ff6b9d', '#ffa94d', '#51cf66'],
+      borderColor: '#121620',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#e8ecf1', padding: 10, font: { size: 11 } }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.label + ': ' + context.parsed.toFixed(1) + '%';
+          }
+        }
+      }
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}
