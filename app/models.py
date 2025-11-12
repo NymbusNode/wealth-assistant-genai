@@ -18,6 +18,7 @@ class User(Base):
     annual_income:Mapped[Numeric]=mapped_column(Numeric, default=0)
     risk_tolerance:Mapped[Risk]=mapped_column(Enum(Risk), default=Risk.medium)
     financial_goal:Mapped[str]=mapped_column(Text, default="")
+    retirement_age:Mapped[int]=mapped_column(Integer, default=65)
     created_at:Mapped[str]=mapped_column(DateTime(timezone=True), server_default=func.now())
 
 class Document(Base):

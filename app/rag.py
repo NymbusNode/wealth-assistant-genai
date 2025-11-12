@@ -30,7 +30,22 @@ def answer(db:Session, query:str, user_meta:Dict)->Dict:
     hits = search_chunks(db, qv, settings.TOP_K)
     ctx = build_context(hits)
 
-    user_clause = f"User profile: risk={user_meta.get('risk','medium')}, goal={user_meta.get('goal','')}"
+    # Build comprehensive user profile clause
+    profile_parts = []
+    if user_meta.get('name'):
+        profile_parts.append(f"Name: {user_meta['name']}")
+    if user_meta.get('age'):
+        profile_parts.append(f"Age: {user_meta['age']}")
+    if user_meta.get('annual_income'):
+        profile_parts.append(f"Annual Income: ${user_meta['annual_income']:,.2f}")
+    if user_meta.get('risk_tolerance'):
+        profile_parts.append(f"Risk Tolerance: {user_meta['risk_tolerance']}")
+    if user_meta.get('retirement_age'):
+        profile_parts.append(f"Target Retirement Age: {user_meta['retirement_age']}")
+    if user_meta.get('financial_goal'):
+        profile_parts.append(f"Financial Goal: {user_meta['financial_goal']}")
+    
+    user_clause = "User Profile:\n" + "\n".join(profile_parts) if profile_parts else "User profile not provided"
     
     messages=[{"role":"system","content":SYSTEM_PROMPT},
               {"role":"user","content":f"{user_clause}\n\nContext:\n{ctx}\n---\nQuestion: {query}"}]

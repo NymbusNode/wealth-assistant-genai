@@ -36,13 +36,14 @@ def register_form():
 def register(username:str=Form(), password:str=Form(), name:str=Form(""),
              age:int=Form(0), annual_income:float=Form(0),
              risk_tolerance:str=Form("medium"), financial_goal:str=Form(""),
-             db:Session=Depends(get_db)):
+             retirement_age:int=Form(65), db:Session=Depends(get_db)):
     
     if db.query(User).filter_by(username=username).first(): 
         raise HTTPException(400, "Username exists")
     
     u = User(username=username, password_hash=hash_password(password), name=name, age=age,
-             annual_income=annual_income, risk_tolerance=Risk(risk_tolerance), financial_goal=financial_goal)
+             annual_income=annual_income, risk_tolerance=Risk(risk_tolerance), financial_goal=financial_goal,
+             retirement_age=retirement_age)
     db.add(u); db.commit()
     resp = RedirectResponse("/dashboard", status_code=302)
     resp.set_cookie(SESSION_COOKIE, issue_session(u.id), httponly=True) 
@@ -86,7 +87,8 @@ def profile(request:Request, db:Session=Depends(get_db)):
 
 @router.post("/profile")
 def profile_update(request:Request, name:str=Form(""), age:int=Form(0), annual_income:float=Form(0),
-                   risk_tolerance:str=Form("medium"), financial_goal:str=Form(""), db:Session=Depends(get_db)):
+                   risk_tolerance:str=Form("medium"), financial_goal:str=Form(""), 
+                   retirement_age:int=Form(65), db:Session=Depends(get_db)):
     u, r = user_or_redirect(request, db)
     if r: 
         return r
@@ -95,6 +97,7 @@ def profile_update(request:Request, name:str=Form(""), age:int=Form(0), annual_i
     u.annual_income=annual_income
     u.risk_tolerance=Risk(risk_tolerance)
     u.financial_goal=financial_goal
+    u.retirement_age=retirement_age
     db.commit()
     return RedirectResponse("/profile", status_code=302)
 
@@ -125,7 +128,14 @@ def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=De
     um = Message(chat_id=chat_id, role="user", content=content)
     db.add(um)
     db.commit()
-    meta = {"risk": u.risk_tolerance.value, "goal": u.financial_goal}
+    meta = {
+        "name": u.name,
+        "age": u.age,
+        "annual_income": float(u.annual_income),
+        "risk_tolerance": u.risk_tolerance.value,
+        "financial_goal": u.financial_goal,
+        "retirement_age": u.retirement_age
+    }
     res = rag_answer(db, content, meta)
     
     # Convert markdown to HTML for assistant response

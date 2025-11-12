@@ -11,6 +11,16 @@
       <option value="medium" {{ 'selected' if user.risk_tolerance.value=='medium' else '' }}>Medium</option>
       <option value="high" {{ 'selected' if user.risk_tolerance.value=='high' else '' }}>High</option>
     </select>
+    <label>Retirement age</label>
+    <select name="retirement_age">
+      <option value="55" {{ 'selected' if user.retirement_age==55 else '' }}>55</option>
+      <option value="60" {{ 'selected' if user.retirement_age==60 else '' }}>60</option>
+      <option value="62" {{ 'selected' if user.retirement_age==62 else '' }}>62</option>
+      <option value="65" {{ 'selected' if user.retirement_age==65 else '' }}>65</option>
+      <option value="67" {{ 'selected' if user.retirement_age==67 else '' }}>67</option>
+      <option value="70" {{ 'selected' if user.retirement_age==70 else '' }}>70</option>
+      <option value="75" {{ 'selected' if user.retirement_age==75 else '' }}>75</option>
+    </select>
     <label>Financial goal</label><input name="financial_goal" value="{{user.financial_goal}}">
     <button type="submit">Save</button>
   </div>
