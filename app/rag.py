@@ -16,7 +16,9 @@ def embed_one(q:str)->List[float]:
     return embed([q])[0]
 
 def search_chunks(db:Session, qv:List[float], k:int)->List[Tuple[Chunk,float]]:
-    stmt = select(Chunk, func.cosine_distance(Chunk.embedding, qv).label("dist")).order_by(text("dist")).limit(k)
+    # Convert list to string format for pgvector
+    qv_str = "[" + ",".join(map(str, qv)) + "]"
+    stmt = select(Chunk, func.cosine_distance(Chunk.embedding, text(f"'{qv_str}'::vector")).label("dist")).order_by(text("dist")).limit(k)
     rows = db.execute(stmt).all(); 
     return [(r[0], float(r[1])) for r in rows]
 
