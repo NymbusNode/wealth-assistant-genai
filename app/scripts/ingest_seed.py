@@ -25,7 +25,9 @@ def chunk(text, max_tokens=int(os.getenv("CHUNK_TOKENS","700")), overlap=0.15):
     return out
 
 def run():
-    ensure_pgvector(); s=SessionLocal()
+    ensure_pgvector()
+    s=SessionLocal()
+    
     for path in glob.glob("seed_docs/*.md"):
         title=os.path.basename(path).replace("_"," ").replace(".md","")
         
