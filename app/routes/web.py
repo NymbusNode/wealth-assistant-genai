@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends, Response, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.db import get_db, Base, engine
 from app.models import User, Chat, Message, Risk, Document
@@ -135,8 +136,17 @@ def chat_new(request:Request, db:Session=Depends(get_db)):
     u, r = user_or_redirect(request, db)
     if r: 
         return r
+    # Fetch all chats ordered by latest message timestamp (desc)
+    all_chats = (
+        db.query(Chat)
+        .outerjoin(Message, Chat.id == Message.chat_id)
+        .filter(Chat.user_id == u.id)
+        .group_by(Chat.id)
+        .order_by(func.max(Message.created_at).desc(), Chat.created_at.desc())
+        .all()
+    )
     # Render chat page without creating a chat yet
-    return render("chat.html", user=u, chat_id="new", messages=[])
+    return render("chat.html", user=u, chat_id="new", messages=[], all_chats=all_chats)
 
 @router.get("/chat/{chat_id}", response_class=HTMLResponse)
 def chat_view(chat_id:str, request:Request, db:Session=Depends(get_db)):
@@ -145,10 +155,26 @@ def chat_view(chat_id:str, request:Request, db:Session=Depends(get_db)):
         return r
     # Handle "new" chat_id
     if chat_id == "new":
-        return render("chat.html", user=u, chat_id="new", messages=[])
+        all_chats = (
+            db.query(Chat)
+            .outerjoin(Message, Chat.id == Message.chat_id)
+            .filter(Chat.user_id == u.id)
+            .group_by(Chat.id)
+            .order_by(func.max(Message.created_at).desc(), Chat.created_at.desc())
+            .all()
+        )
+        return render("chat.html", user=u, chat_id="new", messages=[], all_chats=all_chats)
     
     msgs = db.query(Message).filter_by(chat_id=chat_id).order_by(Message.created_at).all()
-    return render("chat.html", user=u, chat_id=chat_id, messages=msgs)
+    all_chats = (
+        db.query(Chat)
+        .outerjoin(Message, Chat.id == Message.chat_id)
+        .filter(Chat.user_id == u.id)
+        .group_by(Chat.id)
+        .order_by(func.max(Message.created_at).desc(), Chat.created_at.desc())
+        .all()
+    )
+    return render("chat.html", user=u, chat_id=chat_id, messages=msgs, all_chats=all_chats)
 
 @router.post("/chat/{chat_id}/message", response_class=HTMLResponse)
 def chat_message(chat_id:str, request:Request, content:str=Form(), db:Session=Depends(get_db)):

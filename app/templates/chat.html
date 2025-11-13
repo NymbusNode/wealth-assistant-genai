@@ -1,13 +1,46 @@
 {% extends "base.html" %}{% block content %}
-<h2>Chat</h2>
-<div id="chat-log" class="chat-log">
-  {% for message in messages %}{% include "_message.html" %}{% endfor %}
+<div class="chat-layout">
+  <aside class="chat-sidebar" id="chatSidebar">
+    <div class="chat-sidebar-header">
+      <h3>Chats</h3>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Hide/show">☰</button>
+    </div>
+    <div class="chat-sidebar-actions">
+      <a class="btn" href="/chat">+ New chat</a>
+    </div>
+    <div class="chat-history">
+      <ul class="chat-list">
+        {% for c in all_chats %}
+          <li class="{% if chat_id != 'new' and c.id == chat_id %}active{% endif %}">
+            <a href="/chat/{{ c.id }}">
+              <span class="chat-title">{{ c.title or 'Untitled chat' }}</span>
+            </a>
+          </li>
+        {% else %}
+          <li class="muted">No chats yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </aside>
+
+  <section class="chat-main">
+    <h2>Chat</h2>
+    <div id="chat-log" class="chat-log">
+      {% for message in messages %}{% include "_message.html" %}{% endfor %}
+    </div>
+    <form id="chat-form" hx-post="/chat/{{chat_id}}/message" hx-target="#chat-log" hx-swap="beforeend" hx-on::after-request="this.reset()" class="chat-form">
+      <input name="content" placeholder="Ask about asset allocation, account types, etc." required>
+      <button type="submit">Send</button>
+    </form>
+  </section>
 </div>
-<form id="chat-form" hx-post="/chat/{{chat_id}}/message" hx-target="#chat-log" hx-swap="beforeend" hx-on::after-request="this.reset()" class="chat-form">
-  <input name="content" placeholder="Ask about asset allocation, account types, etc." required>
-  <button type="submit">Send</button>
-</form>
+
 <script>
+function toggleSidebar(){
+  const el = document.getElementById('chatSidebar');
+  if (el) el.classList.toggle('collapsed');
+}
+
 document.body.addEventListener('updateChatForm', function(evt) {
   const chatId = evt.detail.value;
   const form = document.getElementById('chat-form');
